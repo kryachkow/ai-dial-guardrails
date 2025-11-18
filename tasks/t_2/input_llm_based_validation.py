@@ -63,13 +63,14 @@ class Validation(BaseModel):
     )
 
 def validate(user_input: str) -> Validation:
-    parser: PydanticOutputParser = None#TODO: Create `PydanticOutputParser` with `pydantic_object=Validation`
+    parser: PydanticOutputParser = PydanticOutputParser(pydantic_object=Validation)#TODO: Create `PydanticOutputParser` with `pydantic_object=Validation`
     #TODO:
     # Add messages:
     #    - SystemMessagePromptTemplate.from_template(template=VALIDATION_PROMPT)
     #    - HumanMessage(content=user_input)
     messages = [
-
+        SystemMessagePromptTemplate.from_template(template=VALIDATION_PROMPT),
+        HumanMessage(content=user_input)
     ]
     prompt = ChatPromptTemplate.from_messages(messages=messages).partial(
         format_instructions=parser.get_format_instructions()
@@ -83,7 +84,8 @@ def main():
     #   - SystemMessage with SYSTEM_PROMPT as content
     #   - HumanMessage with PROFILE as content
     messages: list[BaseMessage] = [
-
+        SystemMessage(content=SYSTEM_PROMPT),
+        HumanMessage(content=PROFILE)
     ]
 
     print("Type your question or 'exit' to quit.")
@@ -93,6 +95,14 @@ def main():
         if user_input.lower() == "exit":
             print("Exiting the chat. Goodbye!")
             break
+        validation = validate(user_input)
+        if validation.valid:
+            messages.append(HumanMessage(content=user_input))
+            ai_message = client.invoke(messages)
+            messages.append(ai_message)
+            print(f"🤖Response:\n{ai_message.content}")
+        else:
+            print(f"🚫Blocked: {validation.description}")
 
         #TODO: Implement the complete validation and response logic
         # 1. Call `validate` method with `user_input` and assign result to `validation` variable

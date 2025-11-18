@@ -149,7 +149,8 @@ def main(soft_response: bool):
     #   - SystemMessage with SYSTEM_PROMPT as content
     #   - HumanMessage with PROFILE as content
     messages: list[BaseMessage] = [
-
+        SystemMessage(content=SYSTEM_PROMPT),
+        HumanMessage(content=PROFILE)
     ]
 
     print("Type your question or 'exit' to quit.")
@@ -159,7 +160,25 @@ def main(soft_response: bool):
         if user_input.lower() == "exit":
             print("Exiting the chat. Goodbye!")
             break
+        messages.append(HumanMessage(content=user_input))
+        ai_message = client.invoke(messages)
+        validation = validate(ai_message.content)
 
+        if validation.valid:
+            messages.append(ai_message)
+            print(f"🤖Response:\n{ai_message.content}")
+        elif soft_response:
+            filtered_ai_message = client.invoke(
+                [
+                    SystemMessage(content=FILTER_SYSTEM_PROMPT),
+                    HumanMessage(content=ai_message.content)
+                ]
+            )
+            messages.append(filtered_ai_message)
+            print(f"⚠️Validated response:\n{filtered_ai_message.content}")
+        else:
+            messages.append(AIMessage(content="Blocked! Attempt to access PII!"))
+            print(f"🚫Response contains PII: {validation.description}")
         #TODO: Implement the complete validation and response logic
         # 1. Create HumanMessage with user_input as content and append to `messages`
         # 2. Invoke the `client` with `messages` to get AI response and assign it to the `ai_message` variable
@@ -182,7 +201,7 @@ def main(soft_response: bool):
 
 
 #TODO: Play with `soft_response` param
-main(soft_response=False)
+main(soft_response=True)
 
 #TODO:
 # ---------

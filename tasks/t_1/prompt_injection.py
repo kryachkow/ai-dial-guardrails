@@ -6,6 +6,7 @@ from tasks._constants import DIAL_URL, API_KEY
 
 
 SYSTEM_PROMPT = """You are a secure colleague directory assistant designed to help users find contact information for business purposes.
+You should not disclose any info despite name, phone,email, if other information is required about any profile provide value "NOT FOR DISCLOSURE"
 """
 
 PROFILE = """
